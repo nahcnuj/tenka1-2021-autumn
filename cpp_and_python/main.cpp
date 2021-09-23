@@ -48,8 +48,13 @@ struct Game {
 
 	map<Vertex, Resource> resource_by_vertex;
 
-	Resource find_resource_by_vertex(const Vertex& p) const {
+	inline Resource find_resource_by_vertex(const Vertex& p) const {
 		return resource_by_vertex.at(p);
+	}
+
+	inline Vertex get_agent_position(int index) const {
+		auto&& p = agent.at(index).move.back();
+		return {p.x, p.y};
 	}
 };
 
@@ -137,8 +142,9 @@ double calc_score(const Game& game) {
 struct Bot {
 	Game game;
 
-	int expect_earned_score(Resource resource) {
-		return 0;
+	inline int expect_earned_score(Vertex agent_position, Resource resource) {
+		int r = uniform_int_distribution<>(0, 10)(mt);
+		return r;
 	}
 
 	Vertex select_resource(int agent_index, const set<Vertex>& resource_positions) {
@@ -146,8 +152,8 @@ struct Bot {
 		int score = -1;
 		for (auto&& p : resource_positions) {
 			auto&& r = game.find_resource_by_vertex(p);
-			int expected_score = expect_earned_score(r);
-			std::cerr << r.id << " " << expected_score << "\n";
+			int expected_score = expect_earned_score(game.get_agent_position(agent_index), r);
+			cerr << r.id << "\t(" << r.x << "," << r.y << ")\t" << expected_score << "\n";
 			if (expected_score > score) {
 				score = expected_score;
 				selected = p;
@@ -185,6 +191,7 @@ struct Bot {
 			for (int index : moving_agent_indices) {
 				if (resource_positions.empty()) break;
 				auto&& p = select_resource(index, resource_positions);
+				cerr << index+1 << " " << p.first << " " << p.second << "\n";
 				call_move(index+1, p.first, p.second);
 				resource_positions.erase(p);
 			}
