@@ -150,7 +150,7 @@ struct Bot {
 	}
 
 	// expect score earned until next query
-	inline int expect_earned_score(const Vertex& agent_position, const Resource& resource) const {
+	int expect_earned_score(const Vertex& agent_position, const Resource& resource) const {
 		int r = uniform_int_distribution<>(0, 10)(mt);
 		int t = taken_to_move(agent_position, resource);
 		if (t > INTERVAL_MSEC) {
