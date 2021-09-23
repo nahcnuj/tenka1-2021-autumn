@@ -13,6 +13,8 @@ using namespace std;
 
 using Vertex = pair<int,int>;
 
+const int INTERVAL_MSEC = 1000;
+
 mt19937 mt;
 
 struct AgentMove {
@@ -142,12 +144,27 @@ double calc_score(const Game& game) {
 struct Bot {
 	Game game;
 
-	inline int expect_earned_score(Vertex agent_position, Resource resource) {
-		int r = uniform_int_distribution<>(0, 10)(mt);
-		return r;
+	inline int taken_to_move(const Vertex& from, const Resource& resource) const {
+		int dx = from.first - resource.x, dy = from.second - resource.y;
+		return 100 * sqrt( dx*dx + dy*dy );
 	}
 
-	Vertex select_resource(int agent_index, const set<Vertex>& resource_positions) {
+	// expect score earned until next query
+	inline int expect_earned_score(const Vertex& agent_position, const Resource& resource) const {
+		int r = uniform_int_distribution<>(0, 10)(mt);
+		int t = taken_to_move(agent_position, resource);
+		if (t > INTERVAL_MSEC) {
+			return 0;
+		}
+		int arrived_at = game.now + t;
+		int available_time = resource.t1 - arrived_at;
+		if (available_time <= 0) {
+			return 0;
+		}
+		return resource.weight * available_time / 1000;	// TODO: 他プレイヤーの回収車数による減衰を考慮
+	}
+
+	Vertex select_resource(int agent_index, const set<Vertex>& resource_positions) const {
 		Vertex selected;
 		int score = -1;
 		for (auto&& p : resource_positions) {
@@ -182,7 +199,7 @@ struct Bot {
 			for (int i = 0; i < 5; ++ i) {
 				const auto& m = game.agent[i].move.back();
 				if (resource_positions.count({m.x, m.y})) {
-					resource_positions.erase({m.x, m.y});
+					resource_positions.erase({m.x, m.y});	// TODO: これも含めて評価
 				} else {
 					moving_agent_indices.push_back(i);
 				}
@@ -196,7 +213,7 @@ struct Bot {
 				resource_positions.erase(p);
 			}
 
-			this_thread::sleep_for(chrono::milliseconds(1000));
+			this_thread::sleep_for(chrono::milliseconds(INTERVAL_MSEC));
 		}
 	}
 };
