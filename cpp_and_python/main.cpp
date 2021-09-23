@@ -183,6 +183,9 @@ struct Bot {
 			}
 		}
 		{
+			if (uniform_int_distribution<>(0, 100)(mt) < 10) {
+				queue.pop();
+			}
 			auto [score, selected] = queue.top();
 			if (score > 0) {
 				cerr << selected.id << "\t(" << selected.x << "," << selected.y << ")\t" << (selected.t0 > game.now ? '*' : ' ') << score << "\n";
