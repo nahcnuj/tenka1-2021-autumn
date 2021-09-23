@@ -242,7 +242,7 @@ struct Bot {
 				int t = taken_to_move(game.get_agent_position(index), r);
 				cerr << index+1 << " (" << r.t0 - t << ") " << p.first << " " << p.second << "\n";
 				call_will_move(index+1, p.first, p.second, r.t0 - t);
-				//resource_positions.erase(p);
+				if (r.type == "B") resource_positions.erase(p);
 			}
 
 			this_thread::sleep_for(chrono::milliseconds(INTERVAL_MSEC));
