@@ -150,14 +150,14 @@ struct Bot {
 	}
 
 	// expect score earned until next query
-	int expect_earned_score(const Vertex& agent_position, const Resource& resource) const {
+	int expect_earned_score(const Vertex& agent_position, const Resource& resource, int interval_msec = INTERVAL_MSEC) const {
 		int r = uniform_int_distribution<>(0, 10)(mt);
 		int t = taken_to_move(agent_position, resource);
-		if (t > INTERVAL_MSEC) {
+		if (t > interval_msec) {
 			return 0;
 		}
 		int arrived_at = game.now + t;
-		int available_time = max(resource.t1 - arrived_at - max(resource.t0 - game.now, 0), INTERVAL_MSEC);
+		int available_time = max(resource.t1 - arrived_at - max(resource.t0 - game.now, 0), interval_msec);
 		if (available_time <= 0) {
 			return 0;
 		};
@@ -165,19 +165,30 @@ struct Bot {
 	}
 
 	Vertex select_resource(int agent_index, const set<Vertex>& resource_positions) const {
-		Resource selected;
-		int score = -1;
+		Resource selected, secondary_selected;
+		int score = -1, secondary_score = -1;
 		for (auto&& p : resource_positions) {
 			auto&& r = game.find_resource_by_vertex(p);
 			int expected_score = expect_earned_score(game.get_agent_position(agent_index), r);
 			// cerr << r.id << "\t(" << r.x << "," << r.y << ")\t" << (r.t0 > game.now ? '*' : ' ') << expected_score << "\n";
 			if (expected_score > score) {
 				score = expected_score;
-				selected = r;
+				selected = secondary_selected = r;
+			} else if (score <= 0) {
+				int expected_score = expect_earned_score(game.get_agent_position(agent_index), r, 2 * INTERVAL_MSEC);
+				// cerr << r.id << "\t(" << r.x << "," << r.y << ")\t" << '#' << expected_score << "\n";
+				if (expected_score > secondary_score) {
+					secondary_score = expected_score;
+					secondary_selected = r;
+				}
 			}
 		}
-		cerr << selected.id << "\t(" << selected.x << "," << selected.y << ")\t" << (selected.t0 > game.now ? '*' : ' ') << score << "\n";
-		return {selected.x, selected.y};
+		if (score > 0) {
+			cerr << selected.id << "\t(" << selected.x << "," << selected.y << ")\t" << (selected.t0 > game.now ? '*' : ' ') << score << "\n";
+			return {selected.x, selected.y};
+		}
+		cerr << secondary_selected.id << "\t(" << secondary_selected.x << "," << secondary_selected.y << ")\t" << '#' << secondary_score << "\n";
+		return {secondary_selected.x, secondary_selected.y};
 	}
 
 	void solve() {
