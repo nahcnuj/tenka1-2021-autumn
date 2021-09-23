@@ -186,7 +186,7 @@ struct Bot {
 			}
 		}
 		{
-			if (queue.size() >= 2 && uniform_int_distribution<>(0, 100)(mt) < 10) {
+			/*if (queue.size() >= 2 && uniform_int_distribution<>(0, 100)(mt) < 10) {
 				auto [score, selected] = queue.top();
 				cerr << selected.id << "\t" << selected.type << "\t(" << selected.x << "," << selected.y << ")\t" << (selected.t0 > game.now ? '*' : ' ') << score << "\n";
 				queue.pop();
@@ -195,7 +195,7 @@ struct Bot {
 					cerr << selected.id << "\t" << selected.type << "\t(" << selected.x << "," << selected.y << ")\t" << (selected.t0 > game.now ? '*' : ' ') << score << "\n";
 					queue.pop();
 				}
-			}
+			}*/
 			auto [score, selected] = queue.top();
 			if (score > 0) {
 				cerr << selected.id << "\t" << selected.type << "\t(" << selected.x << "," << selected.y << ")\t" << (selected.t0 > game.now ? '*' : ' ') << score << "\n";
