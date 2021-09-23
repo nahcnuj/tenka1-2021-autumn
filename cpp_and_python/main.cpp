@@ -165,18 +165,19 @@ struct Bot {
 	}
 
 	Vertex select_resource(int agent_index, const set<Vertex>& resource_positions) const {
-		Vertex selected;
+		Resource selected;
 		int score = -1;
 		for (auto&& p : resource_positions) {
 			auto&& r = game.find_resource_by_vertex(p);
 			int expected_score = expect_earned_score(game.get_agent_position(agent_index), r);
-			cerr << r.id << "\t(" << r.x << "," << r.y << ")\t" << (r.t0 > game.now ? '*' : ' ') << expected_score << "\n";
+			// cerr << r.id << "\t(" << r.x << "," << r.y << ")\t" << (r.t0 > game.now ? '*' : ' ') << expected_score << "\n";
 			if (expected_score > score) {
 				score = expected_score;
-				selected = p;
+				selected = r;
 			}
 		}
-		return selected;
+		cerr << selected.id << "\t(" << selected.x << "," << selected.y << ")\t" << (selected.t0 > game.now ? '*' : ' ') << score << "\n";
+		return {selected.x, selected.y};
 	}
 
 	void solve() {
@@ -199,11 +200,7 @@ struct Bot {
 			vector<int> moving_agent_indices;
 			for (int i = 0; i < 5; ++ i) {
 				const auto& m = game.agent[i].move.back();
-				if (resource_positions.count({m.x, m.y})) {
-					resource_positions.erase({m.x, m.y});	// TODO: これも含めて評価
-				} else {
-					moving_agent_indices.push_back(i);
-				}
+				moving_agent_indices.push_back(i);
 			}
 
 			for (int index : moving_agent_indices) {
