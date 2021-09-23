@@ -183,7 +183,7 @@ struct Bot {
 			}
 		}
 		{
-			if (uniform_int_distribution<>(0, 100)(mt) < 10) {
+			if (uniform_int_distribution<>(0, 100)(mt) < 50) {
 				queue.pop();
 			}
 			auto [score, selected] = queue.top();
