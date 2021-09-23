@@ -178,14 +178,14 @@ struct Bot {
 				if (resource_positions.count({m.x, m.y})) {
 					resource_positions.erase({m.x, m.y});
 				} else {
-					moving_agent_indices.push_back(i+1);
+					moving_agent_indices.push_back(i);
 				}
 			}
 
 			for (int index : moving_agent_indices) {
 				if (resource_positions.empty()) break;
 				auto&& p = select_resource(index, resource_positions);
-				call_move(index, p.first, p.second);
+				call_move(index+1, p.first, p.second);
 				resource_positions.erase(p);
 			}
 
