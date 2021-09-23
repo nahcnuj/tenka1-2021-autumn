@@ -157,11 +157,11 @@ struct Bot {
 			return 0;
 		}
 		int arrived_at = game.now + t;
-		int available_time = resource.t1 - arrived_at;
+		int available_time = max(resource.t1 - arrived_at, INTERVAL_MSEC);
 		if (available_time <= 0) {
 			return 0;
-		}
-		return resource.weight * available_time / 1000;	// TODO: 他プレイヤーの回収車数による減衰を考慮
+		};
+		return resource.weight * available_time;	// TODO: 他プレイヤーの回収車数による減衰を考慮
 	}
 
 	Vertex select_resource(int agent_index, const set<Vertex>& resource_positions) const {
