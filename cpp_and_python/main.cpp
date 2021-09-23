@@ -183,9 +183,13 @@ struct Bot {
 			}
 		}
 		{
-			if (uniform_int_distribution<>(0, 100)(mt) < 10) {
+			if (queue.size() >= 2 && uniform_int_distribution<>(0, 100)(mt) < 10) {
+				auto [score, selected] = queue.top();
+				cerr << selected.id << "\t(" << selected.x << "," << selected.y << ")\t" << (selected.t0 > game.now ? '*' : ' ') << score << "\n";
 				queue.pop();
-				if (uniform_int_distribution<>(0, 100)(mt) < 10) {
+				if (queue.size() >= 2 && uniform_int_distribution<>(0, 100)(mt) < 10) {
+					auto [score, selected] = queue.top();
+					cerr << selected.id << "\t(" << selected.x << "," << selected.y << ")\t" << (selected.t0 > game.now ? '*' : ' ') << score << "\n";
 					queue.pop();
 				}
 			}
