@@ -13,7 +13,7 @@ using namespace std;
 
 using Vertex = pair<int,int>;
 
-const int INTERVAL_MSEC = 1000;
+const int INTERVAL_MSEC = 110;
 
 mt19937 mt;
 
@@ -180,7 +180,7 @@ struct Bot {
 				queue.emplace(expected_score, r);
 			}
 			{
-				int expected_score = expect_earned_score(game.get_agent_position(agent_index), r, 2 * INTERVAL_MSEC);
+				int expected_score = expect_earned_score(game.get_agent_position(agent_index), r, 10 * INTERVAL_MSEC);
 				// cerr << r.id << "\t(" << r.x << "," << r.y << ")\t" << '#' << expected_score << "\n";
 				queue2.emplace(expected_score, r);
 			}
@@ -210,14 +210,17 @@ struct Bot {
 	}
 
 	void solve() {
+		static int i = 0;
 		for (;;) {
-			game = call_game();
-			cerr << game.now << "\n";
+			if (i++ % (1000/INTERVAL_MSEC) == 0) {
+				game = call_game();
+				cerr << game.now << "\n";
 
-			for (const auto& o : game.owned_resource) {
-				fprintf(stderr, "%s: %.2f ", o.type.c_str(), o.amount);
+				for (const auto& o : game.owned_resource) {
+					fprintf(stderr, "%s: %.2f ", o.type.c_str(), o.amount);
+				}
+				fprintf(stderr, "Score: %.2f\n", calc_score(game));
 			}
-			fprintf(stderr, "Score: %.2f\n", calc_score(game));
 
 			set<Vertex> resource_positions;
 			for (const auto& r : game.resource) {
@@ -239,7 +242,7 @@ struct Bot {
 				int t = taken_to_move(game.get_agent_position(index), r);
 				cerr << index+1 << " (" << r.t0 - t << ") " << p.first << " " << p.second << "\n";
 				call_will_move(index+1, p.first, p.second, r.t0 - t);
-				//resource_positions.erase(p);
+				resource_positions.erase(p);
 			}
 
 			this_thread::sleep_for(chrono::milliseconds(INTERVAL_MSEC));
