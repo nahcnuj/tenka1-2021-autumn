@@ -1,8 +1,3 @@
-/*
-サンプル初期実装
-移動先に資源が無い回収車を、ランダムに選んだ出現中の資源へと移動させる
-ただしこのとき２台以上の回収車が同じ資源を選ばないようにする
-*/
 #include <stdlib.h>
 #include <iostream>
 #include <string>
@@ -130,7 +125,10 @@ double calc_score(const Game& game) {
 }
 
 struct Bot {
+	using Vertex = pair<int,int>;
+
 	Game game;
+
 	void solve() {
 		for (;;) {
 			game = call_game();
@@ -140,7 +138,7 @@ struct Bot {
 			}
 			fprintf(stderr, "Score: %.2f\n", calc_score(game));
 
-			set<pair<int,int>> resource_positions;
+			set<Vertex> resource_positions;
 			for (const auto& r : game.resource) {
 				if (r.t0 <= game.now && game.now < r.t1) {
 					resource_positions.insert({r.x, r.y});
