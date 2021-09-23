@@ -183,9 +183,9 @@ struct Bot {
 			}
 		}
 		{
-			if (uniform_int_distribution<>(0, 100)(mt) < 30) {
+			if (uniform_int_distribution<>(0, 100)(mt) < 10) {
 				queue.pop();
-				if (uniform_int_distribution<>(0, 100)(mt) < 30) {
+				if (uniform_int_distribution<>(0, 100)(mt) < 10) {
 					queue.pop();
 				}
 			}
