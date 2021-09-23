@@ -157,7 +157,7 @@ struct Bot {
 			return 0;
 		}
 		int arrived_at = game.now + t;
-		int available_time = max(resource.t1 - arrived_at, INTERVAL_MSEC);
+		int available_time = max(resource.t1 - arrived_at - max(resource.t0 - game.now, 0), INTERVAL_MSEC);
 		if (available_time <= 0) {
 			return 0;
 		};
@@ -170,7 +170,7 @@ struct Bot {
 		for (auto&& p : resource_positions) {
 			auto&& r = game.find_resource_by_vertex(p);
 			int expected_score = expect_earned_score(game.get_agent_position(agent_index), r);
-			cerr << r.id << "\t(" << r.x << "," << r.y << ")\t" << expected_score << "\n";
+			cerr << r.id << "\t(" << r.x << "," << r.y << ")\t" << (r.t0 > game.now ? '*' : ' ') << expected_score << "\n";
 			if (expected_score > score) {
 				score = expected_score;
 				selected = p;
@@ -182,6 +182,7 @@ struct Bot {
 	void solve() {
 		for (;;) {
 			game = call_game();
+			cerr << game.now << "\n";
 
 			for (const auto& o : game.owned_resource) {
 				fprintf(stderr, "%s: %.2f ", o.type.c_str(), o.amount);
@@ -190,7 +191,7 @@ struct Bot {
 
 			set<Vertex> resource_positions;
 			for (const auto& r : game.resource) {
-				if (r.t0 <= game.now && game.now < r.t1) {
+				if (r.t0 <= game.now + INTERVAL_MSEC && game.now < r.t1) {
 					resource_positions.insert({r.x, r.y});
 				}
 			}
@@ -208,8 +209,10 @@ struct Bot {
 			for (int index : moving_agent_indices) {
 				if (resource_positions.empty()) break;
 				auto&& p = select_resource(index, resource_positions);
-				cerr << index+1 << " " << p.first << " " << p.second << "\n";
-				call_move(index+1, p.first, p.second);
+				auto&& r = game.find_resource_by_vertex(p);
+				int t = taken_to_move(game.get_agent_position(index), r);
+				cerr << index+1 << " (" << r.t0 - t << ") " << p.first << " " << p.second << "\n";
+				call_will_move(index+1, p.first, p.second, r.t0 - t);
 				resource_positions.erase(p);
 			}
 
