@@ -8,7 +8,10 @@
 #include <queue>
 #include <random>
 #include <algorithm>
+#include <map>
 using namespace std;
+
+using Vertex = pair<int,int>;
 
 mt19937 mt;
 
@@ -42,6 +45,12 @@ struct Game {
 	vector<Resource> resource;
 	int next_resource;
 	vector<OwnedResource> owned_resource;
+
+	map<Vertex, Resource> resource_by_vertex;
+
+	Resource find_resource_by_vertex(const Vertex& p) const {
+		return resource_by_vertex.at(p);
+	}
 };
 
 struct Move {
@@ -70,6 +79,7 @@ Game call_game() {
 	res.resource.resize(num_resource);
 	for (auto& r : res.resource) {
 		cin >> r.id >> r.x >> r.y >> r.t0 >> r.t1 >> r.type >> r.weight;
+		res.resource_by_vertex.emplace(make_pair(r.x, r.y), r);
 	}
 	res.owned_resource.resize(num_owned_resource);
 	for (auto& o : res.owned_resource) {
@@ -125,9 +135,26 @@ double calc_score(const Game& game) {
 }
 
 struct Bot {
-	using Vertex = pair<int,int>;
-
 	Game game;
+
+	int expect_earned_score(Resource resource) {
+		return 0;
+	}
+
+	Vertex select_resource(int agent_index, const set<Vertex>& resource_positions) {
+		Vertex selected;
+		int score = -1;
+		for (auto&& p : resource_positions) {
+			auto&& r = game.find_resource_by_vertex(p);
+			int expected_score = expect_earned_score(r);
+			std::cerr << r.id << " " << expected_score << "\n";
+			if (expected_score > score) {
+				score = expected_score;
+				selected = p;
+			}
+		}
+		return selected;
+	}
 
 	void solve() {
 		for (;;) {
@@ -145,23 +172,21 @@ struct Bot {
 				}
 			}
 
-			vector<int> index_list;
+			vector<int> moving_agent_indices;
 			for (int i = 0; i < 5; ++ i) {
 				const auto& m = game.agent[i].move.back();
 				if (resource_positions.count({m.x, m.y})) {
 					resource_positions.erase({m.x, m.y});
 				} else {
-					index_list.push_back(i+1);
+					moving_agent_indices.push_back(i+1);
 				}
 			}
 
-			for (int index : index_list) {
+			for (int index : moving_agent_indices) {
 				if (resource_positions.empty()) break;
-				int r = uniform_int_distribution<>(0, resource_positions.size()-1)(mt);
-				auto it = resource_positions.begin();
-				for (int i = 0; i < r; ++ i) ++ it;
-				call_move(index, it->first, it->second);
-				resource_positions.erase(it);
+				auto&& p = select_resource(index, resource_positions);
+				call_move(index, p.first, p.second);
+				resource_positions.erase(p);
 			}
 
 			this_thread::sleep_for(chrono::milliseconds(1000));
