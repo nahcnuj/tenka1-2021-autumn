@@ -13,7 +13,7 @@ using namespace std;
 
 using Vertex = pair<int,int>;
 
-const int INTERVAL_MSEC = 110;
+const int INTERVAL_MSEC = 1000;
 
 mt19937 mt;
 
