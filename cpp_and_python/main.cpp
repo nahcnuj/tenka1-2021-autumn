@@ -151,7 +151,6 @@ struct Bot {
 
 	// expect score earned until next query
 	int expect_earned_score(const Vertex& agent_position, const Resource& resource, int interval_msec = INTERVAL_MSEC) const {
-		int r = uniform_int_distribution<>(0, 10)(mt);
 		int t = taken_to_move(agent_position, resource);
 		if (t > interval_msec) {
 			return 0;
@@ -164,31 +163,37 @@ struct Bot {
 		return resource.weight * available_time;	// TODO: 他プレイヤーの回収車数による減衰を考慮
 	}
 
+	using pq_t = pair<int, Resource>;
 	Vertex select_resource(int agent_index, const set<Vertex>& resource_positions) const {
-		Resource selected, secondary_selected;
-		int score = -1, secondary_score = -1;
+		static auto comp = [](const pq_t& a, const pq_t& b){ return a.first < b.first; };
+		priority_queue<pq_t, vector<pq_t>, decltype(comp)> queue(comp), queue2(comp);
+		Resource secondary_selected;
+		int secondary_score = -1;
 		for (auto&& p : resource_positions) {
 			auto&& r = game.find_resource_by_vertex(p);
-			int expected_score = expect_earned_score(game.get_agent_position(agent_index), r);
-			// cerr << r.id << "\t(" << r.x << "," << r.y << ")\t" << (r.t0 > game.now ? '*' : ' ') << expected_score << "\n";
-			if (expected_score > score) {
-				score = expected_score;
-				selected = secondary_selected = r;
-			} else if (score <= 0) {
+			{
+				int expected_score = expect_earned_score(game.get_agent_position(agent_index), r);
+				// cerr << r.id << "\t(" << r.x << "," << r.y << ")\t" << (r.t0 > game.now ? '*' : ' ') << expected_score << "\n";
+				queue.emplace(expected_score, r);
+			}
+			{
 				int expected_score = expect_earned_score(game.get_agent_position(agent_index), r, 2 * INTERVAL_MSEC);
 				// cerr << r.id << "\t(" << r.x << "," << r.y << ")\t" << '#' << expected_score << "\n";
-				if (expected_score > secondary_score) {
-					secondary_score = expected_score;
-					secondary_selected = r;
-				}
+				queue2.emplace(expected_score, r);
 			}
 		}
-		if (score > 0) {
-			cerr << selected.id << "\t(" << selected.x << "," << selected.y << ")\t" << (selected.t0 > game.now ? '*' : ' ') << score << "\n";
+		{
+			auto [score, selected] = queue.top();
+			if (score > 0) {
+				cerr << selected.id << "\t(" << selected.x << "," << selected.y << ")\t" << (selected.t0 > game.now ? '*' : ' ') << score << "\n";
+				return {selected.x, selected.y};
+			}
+		}
+		{
+			auto [score, selected] = queue2.top();
+			cerr << selected.id << "\t(" << selected.x << "," << selected.y << ")\t" << '#' << score << "\n";
 			return {selected.x, selected.y};
 		}
-		cerr << secondary_selected.id << "\t(" << secondary_selected.x << "," << secondary_selected.y << ")\t" << '#' << secondary_score << "\n";
-		return {secondary_selected.x, secondary_selected.y};
 	}
 
 	void solve() {
