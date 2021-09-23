@@ -160,9 +160,9 @@ struct Bot {
 		if (available_time <= 0) {
 			return 0;
 		};
-		int k = resource.type == "A" ? 10
+		int k = resource.type == "A" ? 1
 		      : resource.type == "B" ? 100
-			  : 1;
+			  : 10;
 		return resource.weight * available_time / k;	// TODO: 他プレイヤーの回収車数による減衰を考慮
 	}
 
