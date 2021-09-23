@@ -160,7 +160,10 @@ struct Bot {
 		if (available_time <= 0) {
 			return 0;
 		};
-		return resource.weight * available_time;	// TODO: 他プレイヤーの回収車数による減衰を考慮
+		int k = resource.type == "A" ? 10
+		      : resource.type == "B" ? 100
+			  : 1;
+		return resource.weight * available_time / k;	// TODO: 他プレイヤーの回収車数による減衰を考慮
 	}
 
 	using pq_t = pair<int, Resource>;
@@ -185,23 +188,23 @@ struct Bot {
 		{
 			if (queue.size() >= 2 && uniform_int_distribution<>(0, 100)(mt) < 10) {
 				auto [score, selected] = queue.top();
-				cerr << selected.id << "\t(" << selected.x << "," << selected.y << ")\t" << (selected.t0 > game.now ? '*' : ' ') << score << "\n";
+				cerr << selected.id << "\t" << selected.type << "\t(" << selected.x << "," << selected.y << ")\t" << (selected.t0 > game.now ? '*' : ' ') << score << "\n";
 				queue.pop();
 				if (queue.size() >= 2 && uniform_int_distribution<>(0, 100)(mt) < 10) {
 					auto [score, selected] = queue.top();
-					cerr << selected.id << "\t(" << selected.x << "," << selected.y << ")\t" << (selected.t0 > game.now ? '*' : ' ') << score << "\n";
+					cerr << selected.id << "\t" << selected.type << "\t(" << selected.x << "," << selected.y << ")\t" << (selected.t0 > game.now ? '*' : ' ') << score << "\n";
 					queue.pop();
 				}
 			}
 			auto [score, selected] = queue.top();
 			if (score > 0) {
-				cerr << selected.id << "\t(" << selected.x << "," << selected.y << ")\t" << (selected.t0 > game.now ? '*' : ' ') << score << "\n";
+				cerr << selected.id << "\t" << selected.type << "\t(" << selected.x << "," << selected.y << ")\t" << (selected.t0 > game.now ? '*' : ' ') << score << "\n";
 				return {selected.x, selected.y};
 			}
 		}
 		{
 			auto [score, selected] = queue2.top();
-			cerr << selected.id << "\t(" << selected.x << "," << selected.y << ")\t" << '#' << score << "\n";
+			cerr << selected.id << "\t" << selected.type << "\t(" << selected.x << "," << selected.y << ")\t" << '#' << score << "\n";
 			return {selected.x, selected.y};
 		}
 	}
